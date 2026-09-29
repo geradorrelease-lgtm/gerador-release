@@ -1,0 +1,1248 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#373435">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>GERADOR DE RELEASE</title>
+
+  <!-- Tailwind CSS & FontAwesome -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Fontes Google -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+
+  <!-- PDF.js para leitura de REDS em PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script>
+    window.addEventListener('DOMContentLoaded', () => {
+      if (window.pdfjsLib) {
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      }
+    });
+  </script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            tactical: ['Chakra Petch', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            tactical: {
+              base: '#171516',
+              surface: '#242122',
+              card: '#302b2c',
+              border: '#5c5240',
+              gold: '#a08f63',
+              goldDark: '#806f49',
+              waGreen: '#00a884',
+              waDark: '#111b21',
+              waBubble: '#1f2c34',
+              waBubbleBorder: '#2a3942'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #070a12;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1f293d;
+      border-radius: 9999px;
+    }
+    .banner-fixed-aspect {
+      aspect-ratio: 1040 / 324;
+      width: 100%;
+    }
+    input:focus, textarea:focus {
+      outline: none;
+    }
+    input[type="text"], textarea {
+      text-transform: uppercase;
+    }
+  </style>
+
+  <style id="pmmg-theme">
+    :root {
+      --pmmg-black: #373435; --pmmg-black-deep: #171516; --pmmg-surface: #242122; --pmmg-card: #302b2c;
+      --pmmg-khaki: #a08f63; --pmmg-khaki-light: #d8ccb0; --pmmg-khaki-dark: #806f49;
+      --pmmg-red: #ab2328; --pmmg-red-light: #f0b6b8; --pmmg-white: #fefefe; --pmmg-muted: #c9c2b8;
+    }
+    body { background: var(--pmmg-black-deep) !important; color: var(--pmmg-white); }
+    .bg-tactical-card { background-color: var(--pmmg-card) !important; }
+    .border-tactical-border { border-color: #5c5240 !important; }
+    input, textarea { background-color: #1f1b1c !important; border-color: #665a45 !important; color: var(--pmmg-white) !important; }
+    input::placeholder, textarea::placeholder { color: #81786b !important; opacity: 0.62 !important; font-style: italic !important; }
+    input:focus, textarea:focus { border-color: var(--pmmg-khaki) !important; box-shadow: 0 0 0 2px rgba(160,143,99,.22); }
+    .placeholder-guidance { color: #81786b; font-size: 11px; font-style: italic; margin-top: 4px; opacity: .78; }
+    .quickNat { border-color: #756647 !important; background: #302b2c !important; color: #eee9df !important; }
+    .quickNat:hover, .quickNat.active { background: var(--pmmg-khaki) !important; color: var(--pmmg-black) !important; }
+  </style>
+
+  <style>
+    /* Estilo do Teclado Flutuante de Emojis */
+    #emojiKeyboardSheet {
+      position: fixed;
+      inset: 0;
+      z-index: 100000;
+      background: rgba(0,0,0,0.65);
+      backdrop-filter: blur(2px);
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+      transition: opacity 0.25s ease;
+    }
+    #emojiKeyboardSheet.active {
+      display: flex;
+    }
+    .emoji-sheet-panel {
+      width: 100%;
+      max-width: 520px;
+      background: #171f26;
+      border-top-left-radius: 26px;
+      border-top-right-radius: 26px;
+      box-shadow: 0 -10px 40px rgba(0,0,0,0.8);
+      border-top: 1px solid #2a3942;
+      overflow: hidden;
+      animation: slideUp 0.22s ease-out;
+    }
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+    .emoji-item-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      height: 48px;
+      border-radius: 12px;
+      cursor: pointer;
+      user-select: none;
+      transition: transform 0.1s, background-color 0.15s;
+    }
+    .emoji-item-btn:active {
+      transform: scale(1.25);
+      background-color: rgba(255,255,255,0.1);
+    }
+    .emoji-tab-btn {
+      color: #94a3b8;
+      font-size: 16px;
+      padding: 10px 14px;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+    }
+    .emoji-tab-btn.active {
+      color: #38bdf8;
+      border-bottom-color: #38bdf8;
+    }
+  </style>
+</head>
+
+<body class="bg-tactical-base text-slate-100 font-sans min-h-screen pb-20 antialiased selection:bg-amber-500 selection:text-black">
+
+  <!-- Navegação Superior -->
+  <header class="sticky top-0 z-40 bg-tactical-surface/95 backdrop-blur border-b border-tactical-border px-4 py-3 shadow-xl">
+    <div class="max-w-2xl mx-auto flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-amber-700 flex items-center justify-center text-slate-950 font-black shadow-lg shadow-amber-500/20 text-xl border border-amber-400/40">
+          <i class="fa-solid fa-file-lines"></i>
+        </div>
+        <div>
+          <h1 class="font-tactical text-base md:text-lg font-bold tracking-wider text-slate-100 flex items-center gap-1.5 leading-none">
+            GERADOR DE RELEASE
+          </h1>
+          <p class="text-[10px] text-slate-400 uppercase tracking-widest mt-1 font-mono font-medium">CRIADO POR SD TEIXEIRA</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <button id="btnResetForm" type="button" title="Limpar todos os campos" class="px-2.5 py-1.5 text-xs text-slate-400 hover:text-amber-400 hover:bg-slate-800 rounded-lg border border-slate-700/60 transition-colors flex items-center gap-1.5 uppercase font-bold">
+          <i class="fa-solid fa-rotate-left text-xs"></i>
+          <span class="hidden sm:inline">LIMPAR</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Container Principal -->
+  <main class="max-w-2xl mx-auto px-4 mt-4 space-y-5">
+
+    <!-- PREENCHIMENTO AUXILIAR VIA PDF -->
+    <section class="bg-tactical-card rounded-2xl p-3 border border-amber-500/30 shadow-lg flex items-center justify-between gap-3">
+      <div class="flex items-center gap-2.5 overflow-hidden">
+        <span class="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0">
+          <i class="fa-solid fa-robot text-sm"></i>
+        </span>
+        <div class="truncate">
+          <p class="text-xs font-bold text-amber-300 uppercase">PREENCHIMENTO AUXILIAR VIA PDF</p>
+          <p id="pdfStatusText" class="text-[10px] text-slate-400 truncate uppercase">PDF OPCIONAL: EXTRAI CONDUZIDOS, REDS E DATA</p>
+        </div>
+      </div>
+      <div>
+        <label for="pdfInputAI" class="cursor-pointer bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/40 text-xs font-semibold px-3 py-2 rounded-xl transition flex items-center gap-1.5 shrink-0 shadow uppercase">
+          <i class="fa-solid fa-file-arrow-up"></i>
+          <span>ANEXAR PDF</span>
+        </label>
+        <input type="file" id="pdfInputAI" accept="application/pdf" class="hidden">
+      </div>
+    </section>
+
+    <!-- Card do Banner Oficial -->
+    <section class="bg-tactical-card rounded-2xl p-3 sm:p-4 border border-amber-500/30 shadow-2xl relative overflow-hidden">
+      <div class="flex items-center justify-between mb-2.5 px-1">
+        <div class="flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span class="text-xs font-semibold uppercase tracking-wider text-amber-300 flex items-center gap-1.5">
+            <i class="fa-solid fa-image text-amber-400"></i> IMAGEM DO RELATÓRIO (MENSAGEM #1)
+          </span>
+          <span id="bannerTypeBadge" class="text-[9px] font-mono bg-amber-400/10 text-amber-300 border border-amber-400/30 px-1.5 py-0.5 rounded uppercase">
+            PADRÃO OFICIAL
+          </span>
+        </div>
+        
+        <div class="flex items-center gap-2">
+          <button id="btnResetBanner" type="button" class="text-[11px] text-slate-400 hover:text-rose-400 transition hidden flex items-center gap-1 underline uppercase">
+            <i class="fa-solid fa-rotate-left text-[10px]"></i> RESTAURAR PADRÃO
+          </button>
+          <label for="bannerFileInput" class="text-[11px] font-medium bg-slate-800 hover:bg-slate-700 text-amber-400 border border-amber-500/30 px-2.5 py-1 rounded-lg cursor-pointer transition flex items-center gap-1.5 shadow uppercase">
+            <i class="fa-solid fa-arrow-up-from-bracket text-[10px]"></i>
+            <span>ALTERAR IMAGEM</span>
+          </label>
+          <input type="file" id="bannerFileInput" accept="image/*" class="hidden">
+        </div>
+      </div>
+
+      <div class="banner-fixed-aspect rounded-xl overflow-hidden border border-slate-700 bg-black flex items-center justify-center shadow-inner relative group">
+        <img id="activeBannerImg" class="w-full h-full object-contain pointer-events-none select-none" alt="BANNER FORÇA TÁTICA REGIONAL">
+        <div class="absolute bottom-2 right-2 text-[9px] text-amber-200/95 font-mono bg-black/85 px-2 py-0.5 rounded border border-amber-500/40 backdrop-blur uppercase">
+          <i class="fa-solid fa-paperclip text-amber-400 mr-1"></i>FOTO BASE DA LEGENDA
+        </div>
+      </div>
+      <div class="mt-3 rounded-xl border border-slate-700 bg-slate-900/70 p-3">
+        <label class="flex items-start gap-2 cursor-pointer">
+          <input id="omitBannerCheckbox" type="checkbox" class="mt-0.5 accent-amber-500">
+          <span class="text-[11px] text-slate-300 leading-relaxed uppercase">
+            <strong class="text-amber-300">NÃO ENVIAR O BANNER NA 1ª MENSAGEM</strong><br>
+            <span class="text-slate-400">MARQUE ESTA OPÇÃO SE PRECISAR DE ENVIAR APENAS O TEXTO DO RELEASE.</span>
+          </span>
+        </label>
+      </div>
+    </section>
+
+    <!-- Formulário Principal -->
+    <form id="tacticalReportForm" class="bg-tactical-card rounded-2xl p-4 sm:p-5 border border-tactical-border space-y-4 shadow-xl" onsubmit="event.preventDefault();">
+      <div class="placeholder-guidance uppercase" role="note">TODOS OS CAMPOS DIGITADOS SÃO CONVERTIDOS AUTOMATICAMENTE EM CAIXA ALTA.</div>
+      
+      <div class="flex items-center justify-between border-b border-slate-700/60 pb-3">
+        <h2 class="font-tactical text-xs sm:text-sm tracking-wider font-bold text-amber-400 flex items-center gap-2 uppercase">
+          <i class="fa-solid fa-file-pen text-base"></i> CAMPOS DO RELATÓRIO (LEGENDA)
+        </h2>
+        <span class="text-[10px] text-slate-400 font-mono bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700 uppercase">CAMPOS VAZIOS</span>
+      </div>
+
+      <!-- DATA e REDS -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+        <div>
+          <label class="block text-[11px] font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
+            DATA <span class="text-amber-400">*</span>
+          </label>
+          <div class="relative">
+            <input type="text" id="inputData" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition" placeholder="" value="" autocomplete="off" name="release-date-manual" inputmode="numeric">
+            <button type="button" id="btnSetToday" title="Preencher com a data de hoje" class="absolute right-2 top-2 text-[11px] bg-slate-800 hover:bg-slate-700 text-amber-400 px-2 py-1 rounded-lg border border-slate-600 transition font-medium uppercase">HOJE</button>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
+            REDS <span class="text-amber-400">*</span>
+          </label>
+          <input type="text" id="inputReds" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-500 font-mono focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition uppercase" placeholder="EX.: 0000-000000000-000" value="">
+        </div>
+      </div>
+
+      <!-- LOCAL (MANUAL E SEM TEXTO DE EXEMPLO) -->
+      <div>
+        <label class="block text-[11px] font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
+          LOCAL <span class="text-amber-400">*</span>
+        </label>
+        <div class="relative">
+          <i class="fa-solid fa-location-dot absolute left-3.5 top-3.5 text-amber-400 text-xs"></i>
+          <input type="text" id="inputLocal" class="w-full bg-slate-900 border border-slate-700 rounded-xl pl-9 pr-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition uppercase" placeholder="" value="">
+        </div>
+      </div>
+
+      <!-- CABEÇALHO DO RELEASE -->
+      <div>
+        <label class="block text-[11px] font-semibold uppercase tracking-wider text-slate-300 mb-2">
+          CABEÇALHO DO RELEASE (EDITÁVEL)
+        </label>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          <div>
+            <label for="inputRPM" class="block text-[10px] font-semibold uppercase tracking-wider text-slate-300 mb-1">LINHA 1</label>
+            <input type="text" id="inputRPM" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white uppercase focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition" placeholder="EX.: CPC" value="CPC">
+          </div>
+          <div>
+            <label for="inputBPM" class="block text-[10px] font-semibold uppercase tracking-wider text-slate-300 mb-1">LINHA 2</label>
+            <input type="text" id="inputBPM" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white uppercase focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition" placeholder="EX.: BPRTRAN" value="BPRTRAN">
+          </div>
+          <div>
+            <label for="inputCIA" class="block text-[10px] font-semibold uppercase tracking-wider text-slate-300 mb-1">LINHA 3</label>
+            <input type="text" id="inputCIA" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white uppercase focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition" placeholder="EX.: FORÇA TÁTICA REGIONAL" value="FORÇA TÁTICA REGIONAL">
+          </div>
+        </div>
+      </div>
+
+      <!-- NATUREZAS -->
+      <div>
+        <div class="flex items-center justify-between mb-1.5">
+          <label class="text-[11px] font-semibold uppercase tracking-wider text-slate-300">
+            NATUREZAS DA OCORRÊNCIA
+          </label>
+          <div class="quickNatScroller overflow-x-auto overflow-y-hidden pb-1 -mx-1 px-1" style="-webkit-overflow-scrolling: touch; scrollbar-width: thin;">
+            <div class="flex flex-nowrap gap-1.5 text-[9px] leading-tight min-w-max uppercase">
+              <button type="button" class="quickNat shrink-0 whitespace-nowrap text-slate-400 hover:text-amber-300 bg-slate-800/80 px-2 py-1 rounded-md border border-slate-700 transition uppercase" data-val="ACIDENTE DE TRÂNSITO COM VÍTIMA" data-code="T00009">ACIDENTE COM VÍTIMA</button>
+              <button type="button" class="quickNat shrink-0 whitespace-nowrap text-slate-400 hover:text-amber-300 bg-slate-800/80 px-2 py-1 rounded-md border border-slate-700 transition uppercase" data-val="ACIDENTE DE TRÂNSITO SEM VÍTIMA" data-code="T00008">ACIDENTE SEM VÍTIMA</button>
+              <button type="button" class="quickNat shrink-0 whitespace-nowrap text-slate-400 hover:text-amber-300 bg-slate-800/80 px-2 py-1 rounded-md border border-slate-700 transition uppercase" data-val="TRÁFICO ILÍCITO DE DROGAS" data-code="I04033">TRÁFICO ILÍCITO DE DROGAS</button>
+              <button type="button" class="quickNat shrink-0 whitespace-nowrap text-slate-400 hover:text-amber-300 bg-slate-800/80 px-2 py-1 rounded-md border border-slate-700 transition uppercase" data-val="FURTO" data-code="C01155">FURTO</button>
+              <button type="button" class="quickNat shrink-0 whitespace-nowrap text-slate-400 hover:text-amber-300 bg-slate-800/80 px-2 py-1 rounded-md border border-slate-700 transition uppercase" data-val="ROUBO" data-code="C01157">ROUBO</button>
+            </div>
+          </div>
+        </div>
+        <div id="naturezasContainer" class="space-y-2">
+          <div class="natureza-row flex items-center gap-2">
+            <span class="natureza-label text-[10px] text-amber-400 font-bold uppercase w-20 shrink-0">PRINCIPAL</span>
+            <input type="text" class="natureza-input flex-1 w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition uppercase" placeholder="EX.: T00009 - ACIDENTE DE TRÂNSITO COM VÍTIMA" value="">
+          </div>
+        </div>
+        <button type="button" id="btnAddNatureza" class="mt-2 text-[11px] font-semibold text-amber-300 bg-slate-800 hover:bg-slate-700 border border-amber-500/30 rounded-lg px-3 py-2 transition flex items-center gap-1.5 uppercase">
+          <i class="fa-solid fa-plus"></i> ADICIONAR OUTRA NATUREZA
+        </button>
+      </div>
+
+      <!-- EQUIPES / VIATURAS -->
+      <div>
+        <label class="block text-[11px] font-semibold uppercase tracking-wider text-amber-400 mb-1.5 flex items-center justify-between">
+          <span>VIATURAS E INTEGRANTES</span>
+          <span class="text-[10px] text-slate-400 font-mono uppercase">EMOJI OPCIONAL PARA INTEGRANTES</span>
+        </label>
+        <div id="equipesContainer" class="space-y-3">
+          <div class="equipe-row rounded-xl border border-slate-700 bg-slate-900/60 p-3 space-y-2">
+            <div class="flex items-center gap-2">
+              <button type="button" class="emoji-trigger-btn w-12 h-11 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-xl flex items-center justify-center shrink-0 transition" data-emoji="🚔" data-type="equipe">🚔</button>
+              <input type="text" class="equipe-input flex-1 min-w-0 bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-500 font-bold uppercase" placeholder="EX.: VP 12345" value="">
+              <button type="button" class="remove-equipe hidden w-9 h-9 rounded-lg bg-rose-900/60 hover:bg-rose-700 text-rose-200 border border-rose-700/50" title="Remover viatura"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <div class="flex gap-1.5 items-center">
+                <button type="button" class="emoji-trigger-btn w-10 h-10 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-lg flex items-center justify-center shrink-0 transition text-slate-400" data-emoji="" data-type="integrante">—</button>
+                <input type="text" class="integrante-input flex-1 bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 uppercase" placeholder="EX.: SD. TEIXEIRA">
+              </div>
+              <div class="flex gap-1.5 items-center">
+                <button type="button" class="emoji-trigger-btn w-10 h-10 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-lg flex items-center justify-center shrink-0 transition text-slate-400" data-emoji="" data-type="integrante">—</button>
+                <input type="text" class="integrante-input flex-1 bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 uppercase" placeholder="EX.: CB. SILVA">
+              </div>
+              <div class="flex gap-1.5 items-center">
+                <button type="button" class="emoji-trigger-btn w-10 h-10 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-lg flex items-center justify-center shrink-0 transition text-slate-400" data-emoji="" data-type="integrante">—</button>
+                <input type="text" class="integrante-input flex-1 bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 uppercase" placeholder="EX.: SGT. SOUZA">
+              </div>
+              <div class="flex gap-1.5 items-center">
+                <button type="button" class="emoji-trigger-btn w-10 h-10 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-lg flex items-center justify-center shrink-0 transition text-slate-400" data-emoji="" data-type="integrante">—</button>
+                <input type="text" class="integrante-input flex-1 bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 uppercase" placeholder="EX.: SD. OLIVEIRA">
+              </div>
+            </div>
+          </div>
+        </div>
+        <button type="button" id="btnAddEquipe" class="mt-2 text-[11px] font-semibold text-amber-300 bg-slate-800 hover:bg-slate-700 border border-amber-500/30 rounded-lg px-3 py-2 transition flex items-center gap-1.5 uppercase">
+          <i class="fa-solid fa-plus"></i> ADICIONAR OUTRA VIATURA
+        </button>
+      </div>
+
+      <!-- HISTÓRICO -->
+      <div>
+        <label class="block text-[11px] font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
+          HISTÓRICO
+        </label>
+        <textarea id="inputHistorico" rows="3" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white placeholder-slate-500 focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition resize-y leading-relaxed uppercase" placeholder="EX.: DESCREVA OBJETIVAMENTE O QUE ACONTECEU"></textarea>
+      </div>
+
+      <!-- MATERIAIS APREENDIDOS -->
+      <div>
+        <label class="block text-[11px] font-semibold uppercase tracking-wider text-slate-300 mb-1.5 flex items-center justify-between">
+          <span>MATERIAIS APREENDIDOS</span>
+          <span class="text-[10px] text-slate-400 font-mono uppercase">CLIQUE NO EMOJI PARA SELECIONAR</span>
+        </label>
+        <div id="materiaisContainer" class="space-y-2">
+          <div class="material-row flex items-center gap-2">
+            <button type="button" class="emoji-trigger-btn w-12 h-11 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-xl flex items-center justify-center shrink-0 transition" data-emoji="📦" data-type="material">📦</button>
+            <input type="text" class="material-input flex-1 bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm uppercase" placeholder="EX.: 01 PISTOLA CALIBRE .40" value="">
+            <button type="button" class="remove-material hidden w-9 h-9 rounded-lg bg-rose-900/60 text-rose-200 border border-rose-700/50" title="Remover material"><i class="fa-solid fa-xmark"></i></button>
+          </div>
+        </div>
+        <button type="button" id="btnAddMaterial" class="mt-2 text-[11px] font-semibold text-amber-300 bg-slate-800 hover:bg-slate-700 border border-amber-500/30 rounded-lg px-3 py-2 transition uppercase">
+          <i class="fa-solid fa-plus"></i> ADICIONAR MATERIAL
+        </button>
+      </div>
+
+      <!-- CONDUZIDOS -->
+      <div>
+        <label class="block text-[11px] font-semibold uppercase tracking-wider text-slate-300 mb-1.5 flex items-center justify-between">
+          <span>CONDUZIDOS</span>
+          <span class="text-[10px] text-amber-400 font-mono uppercase">⛓️ INCLUÍDO</span>
+        </label>
+        <div id="conduzidosContainer" class="space-y-2">
+          <div class="conduzido-row flex items-center gap-2">
+            <div class="flex flex-1 items-center bg-slate-900 border border-slate-700 rounded-xl overflow-hidden focus-within:border-amber-400 focus-within:ring-1 focus-within:ring-amber-400 transition">
+              <div class="px-3.5 py-2.5 bg-slate-800/90 border-r border-slate-700 flex items-center text-lg select-none"><span>⛓️</span></div>
+              <input type="text" class="conduzido-input w-full bg-transparent border-0 px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-0 uppercase font-bold" placeholder="EX.: J.S.">
+            </div>
+            <button type="button" class="btnRemoveConduzido hidden shrink-0 w-9 h-9 rounded-lg bg-red-900/40 text-red-300 border border-red-800/50" title="Remover conduzido">×</button>
+          </div>
+        </div>
+        <button type="button" id="btnAddConduzido" class="mt-2 text-[11px] font-bold uppercase tracking-wide text-amber-300 border border-amber-500/40 rounded-lg px-3 py-2 hover:bg-amber-500/10">+ ADICIONAR CONDUZIDO</button>
+      </div>
+
+      <!-- LOCAL DE ENCERRAMENTO -->
+      <div>
+        <label class="block text-[11px] font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
+          LOCAL DE ENCERRAMENTO
+        </label>
+        <input type="text" id="inputEncerramento" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition uppercase font-semibold" placeholder="EX.: CIA OU DEPLAN 4" value="">
+      </div>
+
+      <!-- FRASE FINAL EDITÁVEL -->
+      <div>
+        <label for="inputSlogan" class="block text-[11px] font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
+          FRASE FINAL DO RELEASE
+        </label>
+        <input type="text" id="inputSlogan" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition uppercase" value="A ÚLTIMA BARREIRA ENTRE A ORDEM E O CAOS">
+      </div>
+    </form>
+
+    <!-- Ações e Envio -->
+    <div class="space-y-3">
+      <div class="bg-tactical-card p-3 rounded-2xl border border-sky-500/30 shadow-xl space-y-2">
+        <button id="btnEnviarReleaseCompleto" type="button" class="w-full bg-gradient-to-r from-emerald-400 to-emerald-500 hover:brightness-110 text-slate-950 font-black py-4 px-4 rounded-xl shadow-lg flex items-center justify-center gap-2.5 transition">
+          <i class="fa-solid fa-paper-plane text-xl"></i>
+          <span class="text-xs sm:text-sm font-black tracking-wider uppercase">ENVIAR RELEASE + BANNER</span>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-2 gap-2.5">
+        <button id="btnCopyReport" type="button" class="bg-tactical-card hover:bg-slate-800 active:bg-slate-900 text-slate-200 text-xs font-semibold py-3 px-3 rounded-xl border border-tactical-border flex items-center justify-center gap-2 transition active:scale-95 shadow uppercase">
+          <i class="fa-regular fa-copy text-amber-400 text-sm"></i>
+          <span>COPIAR SÓ O TEXTO</span>
+        </button>
+
+        <button id="btnOpenWhatsAppDirect" type="button" class="bg-tactical-card hover:bg-slate-800 active:bg-slate-900 text-slate-200 text-xs font-semibold py-3 px-3 rounded-xl border border-tactical-border flex items-center justify-center gap-2 transition active:scale-95 shadow uppercase">
+          <i class="fa-solid fa-arrow-up-right-from-square text-emerald-400 text-sm"></i>
+          <span>WHATSAPP DIRETO</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Pré-visualização -->
+    <section class="bg-tactical-card rounded-2xl p-4 border border-tactical-border shadow-xl space-y-4">
+      <div class="flex items-center justify-between pb-2 border-b border-slate-700/60">
+        <span class="text-xs font-semibold uppercase tracking-wider text-slate-300 flex items-center gap-2">
+          <i class="fa-brands fa-whatsapp text-emerald-400 text-base"></i> PRÉVIA DO RELEASE
+        </span>
+        <span class="text-[10px] text-amber-400 font-mono bg-slate-900 px-2 py-0.5 rounded border border-slate-800 uppercase">RELEASE</span>
+      </div>
+
+      <div class="space-y-1">
+        <div class="flex items-center gap-1.5 text-[10px] text-emerald-400 font-mono font-semibold px-1 uppercase">
+          <i class="fa-solid fa-circle-check text-xs"></i> <span>RELEASE: IMAGEM + LEGENDA</span>
+        </div>
+        
+        <div class="bg-[#1f2c34] rounded-xl p-2.5 sm:p-3 border border-[#2a3942] relative text-slate-100 shadow-md">
+          <div class="absolute -top-1.5 left-6 w-3 h-3 bg-[#1f2c34] rotate-45 border-t border-l border-[#2a3942]"></div>
+          
+          <div class="rounded-lg overflow-hidden border border-slate-700 bg-black mb-2">
+            <img id="previewBannerImg" class="w-full h-auto object-contain" alt="BANNER OFICIAL ATIVO">
+          </div>
+
+          <pre id="previewContent" class="text-xs sm:text-sm font-sans whitespace-pre-wrap select-all leading-relaxed break-words font-medium px-1"></pre>
+          
+          <div class="flex justify-end items-center gap-1.5 mt-2 text-[10px] text-slate-400 font-mono">
+            <span id="previewClock1">18:33</span>
+            <i class="fa-solid fa-check-double text-sky-400 text-xs"></i>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Toast Notification -->
+    <div id="toastMessage" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900/95 border border-amber-500/50 text-amber-300 text-xs font-medium py-3 px-5 rounded-full shadow-2xl backdrop-blur transition-all duration-300 opacity-0 pointer-events-none z-50 flex items-center gap-2 max-w-[90vw] text-center uppercase">
+      <i class="fa-solid fa-circle-check text-emerald-400 text-sm flex-shrink-0"></i>
+      <span id="toastText">OPERAÇÃO CONCLUÍDA COM SUCESSO!</span>
+    </div>
+
+  </main>
+
+  <!-- MODAL RETRÁTIL DE EMOJIS -->
+  <div id="emojiKeyboardSheet" role="dialog" aria-modal="true">
+    <div class="emoji-sheet-panel flex flex-col max-h-[70vh] h-[480px]">
+      
+      <div class="px-4 pt-3 pb-2 border-b border-[#242f38] bg-[#1a232b]">
+        <div class="w-12 h-1 bg-slate-600 rounded-full mx-auto mb-3"></div>
+
+        <div class="flex items-center gap-2 mb-2">
+          <div class="flex-1 bg-[#12181f] rounded-xl flex items-center px-3 py-2 border border-slate-700/60">
+            <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs mr-2"></i>
+            <input type="text" id="emojiSearchInput" placeholder="BUSCAR EMOJIS..." class="bg-transparent border-none text-xs text-white placeholder-slate-500 focus:outline-none w-full !bg-transparent">
+          </div>
+          <button type="button" id="btnRemoveCurrentEmoji" class="px-2.5 py-1.5 rounded-lg bg-slate-800 text-xs text-rose-400 font-bold hover:bg-slate-700 transition" title="Remover emoji">
+            SEM EMOJI
+          </button>
+          <button type="button" id="btnCloseEmojiSheet" class="w-8 h-8 rounded-lg bg-slate-800 text-slate-300 flex items-center justify-center hover:bg-slate-700 text-sm">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <div class="flex items-center justify-between text-slate-400 px-1 pt-1">
+          <button type="button" class="emoji-tab-btn active" data-tab="recentes" title="Recentes"><i class="fa-regular fa-clock"></i></button>
+          <button type="button" class="emoji-tab-btn" data-tab="armas" title="Tático, Espião e Armamento"><i class="fa-solid fa-shield-halved"></i></button>
+          <button type="button" class="emoji-tab-btn" data-tab="drogas" title="Substâncias/Entorpecentes"><i class="fa-solid fa-flask"></i></button>
+          <button type="button" class="emoji-tab-btn" data-tab="valores" title="Valores/Objetos"><i class="fa-solid fa-sack-dollar"></i></button>
+          <button type="button" class="emoji-tab-btn" data-tab="gerais" title="Agentes e Diversos"><i class="fa-regular fa-face-smile"></i></button>
+        </div>
+      </div>
+
+      <div id="emojiGridList" class="flex-1 p-4 overflow-y-auto grid grid-cols-7 sm:grid-cols-8 gap-2 bg-[#171f26]"></div>
+    </div>
+  </div>
+
+  <script>
+    const EMOJI_CATEGORIES = {
+      recentes: ["🪨", "🕵️‍♂️", "🕵️‍♀️", "📦", "💊", "🔫", "🧨", "💣", "🔪", "🪓", "🌿", "🧪", "💉", "💵", "💸", "💰", "🪙", "📱", "⌚", "💻", "⚖️", "🚔", "👮🏻‍♂️"],
+      armas: ["🕵️‍♂️", "🕵️‍♀️", "🔫", "🧨", "💣", "🔪", "🪓", "🗡️", "🛡️", "⚔️", "🎯", "🚔", "🚁", "🦅", "🐕", "💀", "⚡", "⭐"],
+      drogas: ["🪨", "💊", "🌿", "🧪", "💉", "🌱", "🍂", "💨", "🩸", "🔬"],
+      valores: ["💵", "💸", "💰", "🪙", "💳", "📱", "⌚", "💻", "🖥️", "📷", "🔋", "🔑", "🎒", "🧰", "🛠️", "📄", "🧾", "🪪", "⚖️"],
+      gerais: ["🕵️‍♂️", "🕵️‍♀️", "👮🏻‍♂️", "👮🏻‍♀️", "📦", "🔒", "🔓", "🚨", "⚠️", "⛓️", "🔗", "🧤", "👞", "🧢", "🏷️", "📫"]
+    };
+
+    let activeEmojiTrigger = null;
+
+    const emojiSheet = document.getElementById('emojiKeyboardSheet');
+    const emojiGrid = document.getElementById('emojiGridList');
+    const emojiSearchInput = document.getElementById('emojiSearchInput');
+    const tabButtons = document.querySelectorAll('.emoji-tab-btn');
+    const btnRemoveCurrentEmoji = document.getElementById('btnRemoveCurrentEmoji');
+
+    function renderEmojiGrid(emojis) {
+      emojiGrid.innerHTML = '';
+      if (!emojis.length) {
+        emojiGrid.innerHTML = '<div class="col-span-full text-center text-xs text-slate-500 py-8 uppercase">Nenhum emoji encontrado</div>';
+        return;
+      }
+      emojis.forEach(emo => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'emoji-item-btn';
+        btn.textContent = emo;
+        btn.addEventListener('click', () => {
+          if (activeEmojiTrigger) {
+            activeEmojiTrigger.setAttribute('data-emoji', emo);
+            activeEmojiTrigger.textContent = emo;
+            activeEmojiTrigger.classList.remove('text-slate-400');
+            updatePreview();
+          }
+          closeEmojiSheet();
+        });
+        emojiGrid.appendChild(btn);
+      });
+    }
+
+    function openEmojiSheet(triggerElement) {
+      activeEmojiTrigger = triggerElement;
+      emojiSheet.classList.add('active');
+      emojiSearchInput.value = '';
+      switchEmojiTab('recentes');
+    }
+
+    function closeEmojiSheet() {
+      emojiSheet.classList.remove('active');
+      activeEmojiTrigger = null;
+    }
+
+    function switchEmojiTab(tabKey) {
+      tabButtons.forEach(b => b.classList.toggle('active', b.getAttribute('data-tab') === tabKey));
+      renderEmojiGrid(EMOJI_CATEGORIES[tabKey] || []);
+    }
+
+    tabButtons.forEach(btn => {
+      btn.addEventListener('click', () => switchEmojiTab(btn.getAttribute('data-tab')));
+    });
+
+    btnRemoveCurrentEmoji.addEventListener('click', () => {
+      if (activeEmojiTrigger) {
+        activeEmojiTrigger.setAttribute('data-emoji', '');
+        activeEmojiTrigger.textContent = '—';
+        activeEmojiTrigger.classList.add('text-slate-400');
+        updatePreview();
+      }
+      closeEmojiSheet();
+    });
+
+    emojiSearchInput.addEventListener('input', (e) => {
+      const q = e.target.value.trim().toLowerCase();
+      if (!q) {
+        switchEmojiTab('recentes');
+        return;
+      }
+      tabButtons.forEach(b => b.classList.remove('active'));
+      const allUnique = Array.from(new Set(Object.values(EMOJI_CATEGORIES).flat()));
+      renderEmojiGrid(allUnique);
+    });
+
+    document.getElementById('btnCloseEmojiSheet').addEventListener('click', closeEmojiSheet);
+    emojiSheet.addEventListener('click', (e) => {
+      if (e.target === emojiSheet) closeEmojiSheet();
+    });
+
+    document.addEventListener('click', (e) => {
+      const trigger = e.target.closest('.emoji-trigger-btn');
+      if (trigger) openEmojiSheet(trigger);
+    });
+
+    // BANNER OFICIAL SVG
+    const OFFICIAL_BANNER_SVG = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(`
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 324" width="1040" height="324">
+        <rect width="1040" height="324" fill="#030303"/>
+        <rect x="8" y="8" width="1024" height="308" rx="28" fill="none" stroke="#64748b" stroke-width="4"/>
+        <rect x="13" y="13" width="1014" height="298" rx="24" fill="none" stroke="#b8832a" stroke-width="3"/>
+        <g text-anchor="middle" font-family="'Chakra Petch', Impact, sans-serif" font-weight="900">
+          <text x="520" y="140" font-size="64" fill="#cf8c22">FORÇA TÁTICA</text>
+          <text x="520" y="200" font-size="56" fill="#f5b335">REGIONAL</text>
+        </g>
+      </svg>
+    `);
+
+    let currentBannerFile = null;
+    const activeBannerImg = document.getElementById('activeBannerImg');
+    const previewBannerImg = document.getElementById('previewBannerImg');
+    const bannerFileInput = document.getElementById('bannerFileInput');
+    const btnResetBanner = document.getElementById('btnResetBanner');
+    const bannerTypeBadge = document.getElementById('bannerTypeBadge');
+    const omitBannerCheckbox = document.getElementById('omitBannerCheckbox');
+    const previewContent = document.getElementById('previewContent');
+    const previewClock1 = document.getElementById('previewClock1');
+    const toast = document.getElementById('toastMessage');
+    const toastText = document.getElementById('toastText');
+
+    const inputData = document.getElementById('inputData');
+    const inputReds = document.getElementById('inputReds');
+    const inputLocal = document.getElementById('inputLocal');
+    const inputRPM = document.getElementById('inputRPM');
+    const inputBPM = document.getElementById('inputBPM');
+    const inputCIA = document.getElementById('inputCIA');
+    const inputHistorico = document.getElementById('inputHistorico');
+    const inputEncerramento = document.getElementById('inputEncerramento');
+    const inputSlogan = document.getElementById('inputSlogan');
+    const naturezasContainer = document.getElementById('naturezasContainer');
+    const equipesContainer = document.getElementById('equipesContainer');
+    const materiaisContainer = document.getElementById('materiaisContainer');
+    const conduzidosContainer = document.getElementById('conduzidosContainer');
+
+    function formatReds(value) {
+      const digits = String(value || '').replace(/\D/g, '').slice(0, 16);
+      let formatted = digits.slice(0, 4);
+      if (digits.length > 4) formatted += '-' + digits.slice(4, 13);
+      if (digits.length > 13) formatted += '-' + digits.slice(13, 16);
+      return formatted.toUpperCase();
+    }
+
+    inputReds.addEventListener('input', () => {
+      inputReds.value = formatReds(inputReds.value);
+      updatePreview();
+    });
+
+    function fillTodayDate() {
+      const now = new Date();
+      const dd = String(now.getDate()).padStart(2, '0');
+      const mm = String(now.getMonth() + 1).padStart(2, '0');
+      const yyyy = now.getFullYear();
+      inputData.value = `${dd}/${mm}/${yyyy}`;
+      updatePreview();
+    }
+    document.getElementById('btnSetToday').addEventListener('click', fillTodayDate);
+
+    function createNaturezaRow() {
+      const row = document.createElement('div');
+      row.className = 'natureza-row flex items-center gap-2';
+      row.innerHTML = `
+        <span class="natureza-label text-[10px] text-amber-400 font-bold uppercase w-20 shrink-0">SECUNDÁRIA</span>
+        <input type="text" class="natureza-input flex-1 w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-500 uppercase" placeholder="EX.: C01157 - ROUBO">
+        <button type="button" class="remove-natureza w-9 h-9 rounded-lg bg-rose-900/60 hover:bg-rose-700 text-rose-200 border border-rose-700/50" title="Remover"><i class="fa-solid fa-xmark"></i></button>
+      `;
+      row.querySelector('.remove-natureza').addEventListener('click', () => {
+        row.remove();
+        refreshNaturezaLabels();
+        updatePreview();
+      });
+      row.querySelector('.natureza-input').addEventListener('input', (e) => {
+        e.target.value = e.target.value.toUpperCase();
+        updatePreview();
+      });
+      return row;
+    }
+
+    function refreshNaturezaLabels() {
+      const labels = ['PRINCIPAL', 'SECUNDÁRIA', 'TERCIÁRIA', 'QUATERNÁRIA', 'QUINÁRIA', 'SEXTA'];
+      naturezasContainer.querySelectorAll('.natureza-row').forEach((row, index) => {
+        const label = row.querySelector('.natureza-label');
+        if (label) label.textContent = labels[index] || `${index + 1}ª NATUREZA`;
+      });
+    }
+
+    document.getElementById('btnAddNatureza').addEventListener('click', () => {
+      const row = createNaturezaRow();
+      naturezasContainer.appendChild(row);
+      refreshNaturezaLabels();
+      row.querySelector('.natureza-input').focus();
+      updatePreview();
+    });
+
+    document.querySelectorAll('.quickNat').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const val = btn.getAttribute('data-val');
+        const code = btn.getAttribute('data-code') || '';
+        const text = `${code} - ${val}`.trim();
+        const empty = Array.from(naturezasContainer.querySelectorAll('.natureza-input')).find(i => !i.value.trim());
+        if (empty) {
+          empty.value = text;
+        } else {
+          const row = createNaturezaRow();
+          row.querySelector('.natureza-input').value = text;
+          naturezasContainer.appendChild(row);
+          refreshNaturezaLabels();
+        }
+        updatePreview();
+      });
+    });
+
+    function createEquipeRow() {
+      const row = document.createElement('div');
+      row.className = 'equipe-row rounded-xl border border-slate-700 bg-slate-900/60 p-3 space-y-2';
+      row.innerHTML = `
+        <div class="flex items-center gap-2">
+          <button type="button" class="emoji-trigger-btn w-12 h-11 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-xl flex items-center justify-center shrink-0 transition" data-emoji="🚔" data-type="equipe">🚔</button>
+          <input type="text" class="equipe-input flex-1 min-w-0 bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-500 font-bold uppercase" placeholder="EX.: VP 12345">
+          <button type="button" class="remove-equipe w-9 h-9 rounded-lg bg-rose-900/60 hover:bg-rose-700 text-rose-200 border border-rose-700/50" title="Remover"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div class="flex gap-1.5 items-center">
+            <button type="button" class="emoji-trigger-btn w-10 h-10 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-lg flex items-center justify-center shrink-0 transition text-slate-400" data-emoji="" data-type="integrante">—</button>
+            <input type="text" class="integrante-input flex-1 bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 uppercase" placeholder="EX.: SD. TEIXEIRA">
+          </div>
+          <div class="flex gap-1.5 items-center">
+            <button type="button" class="emoji-trigger-btn w-10 h-10 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-lg flex items-center justify-center shrink-0 transition text-slate-400" data-emoji="" data-type="integrante">—</button>
+            <input type="text" class="integrante-input flex-1 bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 uppercase" placeholder="EX.: CB. SILVA">
+          </div>
+          <div class="flex gap-1.5 items-center">
+            <button type="button" class="emoji-trigger-btn w-10 h-10 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-lg flex items-center justify-center shrink-0 transition text-slate-400" data-emoji="" data-type="integrante">—</button>
+            <input type="text" class="integrante-input flex-1 bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 uppercase" placeholder="EX.: SGT. SOUZA">
+          </div>
+          <div class="flex gap-1.5 items-center">
+            <button type="button" class="emoji-trigger-btn w-10 h-10 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-lg flex items-center justify-center shrink-0 transition text-slate-400" data-emoji="" data-type="integrante">—</button>
+            <input type="text" class="integrante-input flex-1 bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 uppercase" placeholder="EX.: SD. OLIVEIRA">
+          </div>
+        </div>
+      `;
+      row.querySelector('.remove-equipe').addEventListener('click', () => {
+        row.remove();
+        updatePreview();
+      });
+      row.querySelectorAll('input').forEach(inp => inp.addEventListener('input', () => {
+        inp.value = inp.value.toUpperCase();
+        updatePreview();
+      }));
+      return row;
+    }
+
+    document.getElementById('btnAddEquipe').addEventListener('click', () => {
+      const row = createEquipeRow();
+      equipesContainer.appendChild(row);
+      updatePreview();
+    });
+
+    function createMaterialRow() {
+      const row = document.createElement('div');
+      row.className = 'material-row flex items-center gap-2';
+      row.innerHTML = `
+        <button type="button" class="emoji-trigger-btn w-12 h-11 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-xl flex items-center justify-center shrink-0 transition" data-emoji="📦" data-type="material">📦</button>
+        <input type="text" class="material-input flex-1 bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm uppercase" placeholder="EX.: 01 PISTOLA CALIBRE .40" value="">
+        <button type="button" class="remove-material w-9 h-9 rounded-lg bg-rose-900/60 text-rose-200 border border-rose-700/50" title="Remover"><i class="fa-solid fa-xmark"></i></button>
+      `;
+      row.querySelector('.remove-material').addEventListener('click', () => {
+        row.remove();
+        if (!materiaisContainer.children.length) materiaisContainer.appendChild(createMaterialRow());
+        updatePreview();
+      });
+      row.querySelector('.material-input').addEventListener('input', (e) => {
+        e.target.value = e.target.value.toUpperCase();
+        updatePreview();
+      });
+      return row;
+    }
+
+    document.getElementById('btnAddMaterial').addEventListener('click', () => {
+      materiaisContainer.appendChild(createMaterialRow());
+      updatePreview();
+    });
+
+    function createConduzidoRow(valor = '') {
+      const row = document.createElement('div');
+      row.className = 'conduzido-row flex items-center gap-2';
+      row.innerHTML = `
+        <div class="flex flex-1 items-center bg-slate-900 border border-slate-700 rounded-xl overflow-hidden focus-within:border-amber-400 focus-within:ring-1 focus-within:ring-amber-400 transition">
+          <div class="px-3.5 py-2.5 bg-slate-800/90 border-r border-slate-700 flex items-center text-lg select-none"><span>⛓️</span></div>
+          <input type="text" class="conduzido-input w-full bg-transparent border-0 px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-0 uppercase font-bold" placeholder="EX.: J.S." value="${valor}">
+        </div>
+        <button type="button" class="btnRemoveConduzido w-9 h-9 rounded-lg bg-red-900/40 text-red-300 border border-red-800/50" title="Remover">×</button>
+      `;
+      row.querySelector('.btnRemoveConduzido').addEventListener('click', () => {
+        row.remove();
+        if (!conduzidosContainer.children.length) conduzidosContainer.appendChild(createConduzidoRow());
+        updatePreview();
+      });
+      row.querySelector('.conduzido-input').addEventListener('input', (e) => {
+        e.target.value = e.target.value.toUpperCase();
+        updatePreview();
+      });
+      return row;
+    }
+
+    document.getElementById('btnAddConduzido').addEventListener('click', () => {
+      conduzidosContainer.appendChild(createConduzidoRow());
+      updatePreview();
+    });
+
+    // -------------------------------------------------------------
+    // CENTRALIZAÇÃO PRECISA PARA O WHATSAPP COM ESPAÇAMENTO UNICODE
+    // -------------------------------------------------------------
+    function toUnicodeBold(text) {
+      const map = {
+        'A':'𝗔','B':'𝗕','C':'𝗖','D':'𝗗','E':'𝗘','F':'𝗙','G':'𝗚','H':'𝗛','I':'𝗜','J':'𝗝','K':'𝗞','L':'𝗟','M':'𝗠',
+        'N':'𝗡','O':'𝗢','P':'𝗣','Q':'𝗤','R':'𝗥','S':'𝗦','T':'𝗧','U':'𝗨','V':'𝗩','W':'𝗪','X':'𝗫','Y':'𝗬','Z':'𝗭',
+        'a':'𝗔','b':'𝗕','c':'𝗖','d':'𝗗','e':'𝗘','f':'𝗙','g':'𝗚','h':'𝗛','i':'𝗜','j':'𝗝','k':'𝗞','l':'𝗟','m':'𝗠',
+        'n':'𝗡','o':'𝗢','p':'𝗣','q':'𝗤','r':'𝗥','s':'𝗦','t':'𝗧','u':'𝗨','v':'𝗩','w':'𝗪','x':'𝗫','y':'𝗬','z':'𝗭',
+        '0':'𝟬','1':'𝟭','2':'𝟮','3':'𝟯','4':'𝟰','5':'𝟱','6':'𝟲','7':'𝟳','8':'𝟴','9':'𝟵'
+      };
+      return Array.from(String(text || '').toUpperCase()).map(ch => map[ch] || ch).join('');
+    }
+
+    function estimateWhatsAppLineWidth(text) {
+      const wide = new Set(['M','W','𝗠','𝗪']);
+      const narrow = new Set(['I','J','L','f','t',':',',','.','/','-','1','𝗜','𝗝','𝗟','𝗳','𝘁','𝟭']);
+      let total = 0;
+      for (const ch of Array.from(String(text || ''))) {
+        if (ch === ' ') total += 0.45;
+        else if (ch === '\u2007') total += 1.0;
+        else if (wide.has(ch)) total += 1.30;
+        else if (narrow.has(ch)) total += 0.55;
+        else total += 1.0;
+      }
+      return total;
+    }
+
+    function centerHeaderLine(line, targetWidth) {
+      const cleanLine = String(line || '').trim();
+      if (!cleanLine) return '';
+      const textWidth = estimateWhatsAppLineWidth(cleanLine);
+      const pad = Math.max(0, Math.round((targetWidth - textWidth) / 2));
+      return '\u2007'.repeat(pad) + cleanLine;
+    }
+
+    function generateReportCaption() {
+      const data = inputData.value.trim().toUpperCase();
+      const local = inputLocal.value.trim().toUpperCase();
+      const reds = inputReds.value.trim().toUpperCase();
+      const HEADER_DIVIDER = '➖'.repeat(10);
+
+      const rawDate = data ? `${toUnicodeBold('DATA:')} ${toUnicodeBold(data)}` : '';
+      const rawRpm = inputRPM.value.trim() ? toUnicodeBold(inputRPM.value.trim().toUpperCase()) : '';
+      const rawBpm = inputBPM.value.trim() ? toUnicodeBold(inputBPM.value.trim().toUpperCase()) : '';
+      const rawCia = inputCIA.value.trim() ? toUnicodeBold(inputCIA.value.trim().toUpperCase()) : '';
+
+      const contentLines = [rawDate, rawRpm, rawBpm, rawCia].filter(Boolean);
+      const contentWidths = contentLines.map(l => estimateWhatsAppLineWidth(l));
+      const TARGET_WIDTH = Math.max(21.5, ...contentWidths);
+
+      let msg = `${HEADER_DIVIDER}\n`;
+      if (rawDate) msg += `${centerHeaderLine(rawDate, TARGET_WIDTH)}\n\n`;
+      if (rawRpm) msg += `${centerHeaderLine(rawRpm, TARGET_WIDTH)}\n`;
+      if (rawBpm) msg += `${centerHeaderLine(rawBpm, TARGET_WIDTH)}\n`;
+      if (rawCia) msg += `${centerHeaderLine(rawCia, TARGET_WIDTH)}\n`;
+      msg += `${HEADER_DIVIDER}\n\n`;
+
+      if (local) msg += `_*LOCAL:*_ ${local}\n\n`;
+      if (reds) msg += `_*REDS:*_ ${reds}\n\n`;
+
+      const naturezas = Array.from(naturezasContainer.querySelectorAll('.natureza-input'))
+        .map(i => i.value.trim().toUpperCase())
+        .filter(Boolean);
+
+      if (naturezas.length) {
+        msg += `_*NATUREZAS:*_\n\n`;
+        naturezas.forEach(n => msg += `${n}\n\n`);
+      }
+
+      const equipes = Array.from(equipesContainer.querySelectorAll('.equipe-row')).map(row => {
+        const emoji = row.querySelector('.emoji-trigger-btn')?.getAttribute('data-emoji') || '🚔';
+        const nome = (row.querySelector('.equipe-input')?.value || '').trim().toUpperCase();
+        const integrantes = Array.from(row.querySelectorAll('.integrante-input')).map(input => {
+          const btnEmo = input.closest('.flex')?.querySelector('.emoji-trigger-btn');
+          const emo = btnEmo ? (btnEmo.getAttribute('data-emoji') || '').trim() : '';
+          const txt = input.value.trim().toUpperCase();
+          if (!txt) return '';
+          return emo ? `${emo} ${txt}` : txt;
+        }).filter(Boolean);
+        return { emoji, nome, integrantes };
+      }).filter(e => e.nome || e.integrantes.length);
+
+      if (equipes.length) {
+        equipes.forEach(eq => {
+          if (eq.nome) msg += `${eq.emoji} ${eq.nome}\n`;
+          eq.integrantes.forEach(i => msg += `${i}\n`);
+          msg += `\n`;
+        });
+      }
+
+      const historico = inputHistorico.value.trim().toUpperCase();
+      if (historico) msg += `_*HISTÓRICO*_\n\n${historico}\n\n`;
+
+      const materiais = Array.from(materiaisContainer.querySelectorAll('.material-row')).map(row => {
+        const emo = (row.querySelector('.emoji-trigger-btn')?.getAttribute('data-emoji') || '').trim();
+        const txt = row.querySelector('.material-input')?.value.trim().toUpperCase();
+        if (!txt) return '';
+        return emo ? `${emo} ${txt}` : txt;
+      }).filter(Boolean);
+
+      if (materiais.length) {
+        msg += `_*MATERIAIS APREENDIDOS*_\n\n${materiais.join('\n')}\n\n`;
+      }
+
+      const conduzidos = Array.from(conduzidosContainer.querySelectorAll('.conduzido-input'))
+        .map(i => i.value.trim().toUpperCase())
+        .filter(Boolean);
+
+      if (conduzidos.length) {
+        conduzidos.forEach(c => {
+          msg += (c.includes('⛓️️') ? c : `⛓️ ${c}`) + '\n';
+        });
+        msg += '\n';
+      }
+
+      const encerramento = inputEncerramento.value.trim().toUpperCase();
+      if (encerramento) msg += `_*LOCAL DE ENCERRAMENTO:*_\n${encerramento}\n\n`;
+
+      msg += (inputSlogan.value.trim().toUpperCase() || 'A ÚLTIMA BARREIRA ENTRE A ORDEM E O CAOS');
+      return msg;
+    }
+
+    function updatePreview() {
+      if (!previewContent) return;
+      previewContent.textContent = generateReportCaption();
+    }
+
+    document.getElementById('tacticalReportForm').addEventListener('input', updatePreview);
+
+    function showToast(text) {
+      toastText.textContent = text;
+      toast.classList.remove('opacity-0', 'pointer-events-none');
+      setTimeout(() => toast.classList.add('opacity-0', 'pointer-events-none'), 3500);
+    }
+
+    // -------------------------------------------------------------
+    // MOTOR DE GERAÇÃO E ENVIO DE JPEG BINÁRIO DO BANNER
+    // -------------------------------------------------------------
+    function createGenuineJpegFile(imageSrc, filename) {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.decoding = 'async';
+        img.onload = () => {
+          try {
+            const w = img.naturalWidth || 1040;
+            const h = img.naturalHeight || 324;
+            const canvas = document.createElement('canvas');
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext('2d', { alpha: false });
+            ctx.fillStyle = '#050505';
+            ctx.fillRect(0, 0, w, h);
+            ctx.drawImage(img, 0, 0, w, h);
+            canvas.toBlob((blob) => {
+              if (blob) {
+                resolve(new File([blob], filename, { type: 'image/jpeg', lastModified: Date.now() }));
+              } else {
+                resolve(null);
+              }
+            }, 'image/jpeg', 0.95);
+          } catch(e) {
+            resolve(null);
+          }
+        };
+        img.onerror = () => resolve(null);
+        img.src = imageSrc;
+      });
+    }
+
+    async function loadBanner() {
+      const saved = localStorage.getItem('forca_tatica_custom_banner_step');
+      if (saved) {
+        activeBannerImg.src = saved;
+        previewBannerImg.src = saved;
+        btnResetBanner.classList.remove('hidden');
+        bannerTypeBadge.textContent = 'PERSONALIZADO';
+        currentBannerFile = await createGenuineJpegFile(saved, 'banner_forca_tatica.jpg');
+      } else {
+        activeBannerImg.src = OFFICIAL_BANNER_SVG;
+        previewBannerImg.src = OFFICIAL_BANNER_SVG;
+        btnResetBanner.classList.add('hidden');
+        bannerTypeBadge.textContent = 'PADRÃO OFICIAL';
+        currentBannerFile = await createGenuineJpegFile(OFFICIAL_BANNER_SVG, 'banner_forca_tatica.jpg');
+      }
+    }
+
+    bannerFileInput.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = async (ev) => {
+        const dataUrl = ev.target.result;
+        activeBannerImg.src = dataUrl;
+        previewBannerImg.src = dataUrl;
+        btnResetBanner.classList.remove('hidden');
+        bannerTypeBadge.textContent = 'PERSONALIZADO';
+        currentBannerFile = await createGenuineJpegFile(dataUrl, 'banner_forca_tatica.jpg');
+        try { localStorage.setItem('forca_tatica_custom_banner_step', dataUrl); } catch(e){}
+      };
+      reader.readAsDataURL(file);
+    });
+
+    btnResetBanner.addEventListener('click', async () => {
+      localStorage.removeItem('forca_tatica_custom_banner_step');
+      activeBannerImg.src = OFFICIAL_BANNER_SVG;
+      previewBannerImg.src = OFFICIAL_BANNER_SVG;
+      btnResetBanner.classList.add('hidden');
+      bannerTypeBadge.textContent = 'PADRÃO OFICIAL';
+      currentBannerFile = await createGenuineJpegFile(OFFICIAL_BANNER_SVG, 'banner_forca_tatica.jpg');
+    });
+
+    function downloadFile(file) {
+      if (!file) return;
+      const url = URL.createObjectURL(file);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = file.name;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+    }
+
+    document.getElementById('btnCopyReport').addEventListener('click', () => {
+      navigator.clipboard.writeText(generateReportCaption()).then(() => showToast('TEXTO COPIADO COM SUCESSO!'));
+    });
+
+    document.getElementById('btnOpenWhatsAppDirect').addEventListener('click', () => {
+      const text = encodeURIComponent(generateReportCaption());
+      window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
+    });
+
+    document.getElementById('btnEnviarReleaseCompleto').addEventListener('click', async () => {
+      const text = generateReportCaption();
+      const omitBanner = !!omitBannerCheckbox?.checked;
+
+      if (omitBanner) {
+        if (navigator.share) {
+          try {
+            await navigator.share({ title: 'RELEASE', text });
+            return;
+          } catch(e){}
+        }
+        window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
+        return;
+      }
+
+      if (!currentBannerFile) {
+        currentBannerFile = await createGenuineJpegFile(activeBannerImg.src || OFFICIAL_BANNER_SVG, 'banner_forca_tatica.jpg');
+      }
+
+      if (navigator.share && navigator.canShare && currentBannerFile && navigator.canShare({ files: [currentBannerFile] })) {
+        try {
+          await navigator.share({
+            title: 'RELEASE',
+            text: text,
+            files: [currentBannerFile]
+          });
+          return;
+        } catch(err) {
+          if (err.name === 'AbortError') return;
+        }
+      }
+
+      // Fallback: Baixa a foto e abre o WhatsApp com a legenda pronta
+      downloadFile(currentBannerFile);
+      navigator.clipboard.writeText(text);
+      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
+      showToast('BANNER BAIXADO! ANEXE A FOTO NO WHATSAPP COM O TEXTO.');
+    });
+
+    document.getElementById('btnResetForm').addEventListener('click', () => {
+      inputData.value = '';
+      inputReds.value = '';
+      inputLocal.value = '';
+      inputHistorico.value = '';
+      inputEncerramento.value = '';
+      conduzidosContainer.innerHTML = '';
+      conduzidosContainer.appendChild(createConduzidoRow());
+      fillTodayDate();
+      updatePreview();
+      showToast('FORMULÁRIO LIMPO!');
+    });
+
+    // -------------------------------------------------------------
+    // MOTOR DE EXTRAÇÃO DE PDF APERFEIÇOADO (INICIAIS DE CONDUZIDOS)
+    // -------------------------------------------------------------
+    function convertToInitials(fullName) {
+      if (!fullName) return '';
+      const ignored = new Set(['DE', 'DA', 'DO', 'DAS', 'DOS', 'E']);
+      return fullName
+        .trim()
+        .toUpperCase()
+        .replace(/[^A-ZÀ-Ú\s]/g, '')
+        .split(/\s+/)
+        .filter(part => part && !ignored.has(part))
+        .map(part => part.charAt(0) + '.')
+        .join('');
+    }
+
+    function extractConduzidosFromPdfText(fullText) {
+      const lines = fullText.split('\n').map(l => l.trim().toUpperCase()).filter(Boolean);
+      const nomes = [];
+
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+
+        if (
+          line.includes('TIPO DE ENVOLVIMENTO') || 
+          line.includes('TIPO ENVOLVIMENTO') || 
+          line.includes('ENVOLVIDO') ||
+          line.includes('AUTOR')
+        ) {
+          const contextWindow = lines.slice(i, Math.min(i + 15, lines.length)).join(' ');
+          
+          if (
+            contextWindow.includes('AUTOR') || 
+            contextWindow.includes('CO-AUTOR') || 
+            contextWindow.includes('INFRATOR')
+          ) {
+            for (let j = i; j < Math.min(i + 15, lines.length); j++) {
+              if (lines[j].startsWith('NOME COMPLETO') || lines[j].includes('NOME:')) {
+                let candidate = lines[j].replace(/NOME COMPLETO:?|NOME:?/g, '').trim();
+                if (!candidate && lines[j + 1]) {
+                  candidate = lines[j + 1].trim();
+                }
+
+                if (
+                  candidate && 
+                  candidate.length > 3 && 
+                  !candidate.includes('MÃE') && 
+                  !candidate.includes('PAI') &&
+                  !candidate.includes('DATA') &&
+                  !candidate.includes('SEXO')
+                ) {
+                  const initials = convertToInitials(candidate);
+                  if (initials && !nomes.includes(initials)) {
+                    nomes.push(initials);
+                  }
+                  break;
+                }
+              }
+            }
+          }
+        }
+      }
+      return nomes;
+    }
+
+    document.getElementById('pdfInputAI')?.addEventListener('change', async (e) => {
+      const file = e.target.files?.[0];
+      const status = document.getElementById('pdfStatusText');
+      if (!file || !window.pdfjsLib) return;
+
+      status.textContent = 'A PROCESSAR PDF...';
+      try {
+        const pdf = await pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
+        let text = '';
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          const content = await page.getTextContent();
+          
+          let lastY = null;
+          let pageText = '';
+          for (const item of content.items) {
+            if (lastY !== null && Math.abs(item.transform[5] - lastY) > 4) {
+              pageText += '\n';
+            }
+            pageText += item.str + ' ';
+            lastY = item.transform[5];
+          }
+          text += pageText + '\n';
+        }
+
+        // REDS
+        const redsMatch = text.match(/\b\d{4}[-\s]?\d{9}[-\s]?\d{3}\b/);
+        if (redsMatch) inputReds.value = formatReds(redsMatch[0]);
+
+        // DATA
+        const dateMatch = text.match(/\b\d{2}\/\d{2}\/\d{4}\b/);
+        if (dateMatch) inputData.value = dateMatch[0];
+
+        // INICIAIS DOS CONDUZIDOS
+        const autores = extractConduzidosFromPdfText(text);
+        if (autores.length > 0) {
+          conduzidosContainer.innerHTML = '';
+          autores.forEach(nomeIniciais => {
+            conduzidosContainer.appendChild(createConduzidoRow(nomeIniciais));
+          });
+        }
+
+        status.textContent = 'CAMPOS E INICIAIS EXTRAÍDOS!';
+        updatePreview();
+        showToast('DADOS EXTRAÍDOS COM SUCESSO DO PDF!');
+      } catch (err) {
+        console.error(err);
+        status.textContent = 'ERRO AO PROCESSAR PDF.';
+      }
+    });
+
+    window.addEventListener('DOMContentLoaded', () => {
+      fillTodayDate();
+      loadBanner();
+      updatePreview();
+    });
+  </script>
+</body>
+</html>
